@@ -30,7 +30,10 @@ body {
 
 /* Hero Section */
 .hero-section {
-  background: var(--gradient-primary);
+  background: linear-gradient(135deg, rgba(225, 6, 0, 0.9) 0%, rgba(255, 23, 68, 0.9) 100%), url('https://images.pexels.com/photos/29276537/pexels-photo-29276537.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   padding: 4rem 2rem;
   text-align: center;
   position: relative;
