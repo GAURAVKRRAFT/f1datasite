@@ -247,13 +247,177 @@ async def get_driver_standings(year: int):
 
 @app.get("/api/races/{year}/{round}")
 async def get_race_details(year: int, round: int):
-    """Get detailed information for a specific race"""
+    """Get detailed information for a specific race including qualifying and race results"""
+    try:
+        if year <= 2022:
+            # Use Jolpica API - get both qualifying and race results
+            race_response = requests.get(f"{JOLPICA_BASE_URL}/{year}/{round}/results.json")
+            qualifying_response = requests.get(f"{JOLPICA_BASE_URL}/{year}/{round}/qualifying.json")
+            
+            if race_response.status_code != 200:
+                raise HTTPException(status_code=404, detail="Race not found")
+            
+            race_data = race_response.json()["MRData"]["RaceTable"]["Races"]
+            
+            qualifying_data = []
+            if qualifying_response.status_code == 200:
+                qualifying_data = qualifying_response.json()["MRData"]["RaceTable"]["Races"]
+            
+            return {
+                "year": year,
+                "round": round,
+                "race_data": race_data,
+                "qualifying_data": qualifying_data,
+                "data_source": "jolpica"
+            }
+        else:
+            # For OpenF1, get race and qualifying data
+            meetings_response = requests.get(f"{OPENF1_BASE_URL}/meetings?year={year}")
+            if meetings_response.status_code != 200:
+                raise HTTPException(status_code=404, detail="Season not found")
+            
+            meetings = meetings_response.json()
+            races = [m for m in meetings if "Grand Prix" in m.get("meeting_name", "")]
+            
+            if round > len(races) or round < 1:
+                raise HTTPException(status_code=404, detail="Race round not found")
+            
+            race_meeting = races[round - 1]
+            meeting_key = race_meeting['meeting_key']
+            
+            # Get all sessions for this meeting
+            sessions_response = requests.get(f"{OPENF1_BASE_URL}/sessions?meeting_key={meeting_key}")
+            if sessions_response.status_code != 200:
+                raise HTTPException(status_code=404, detail="Sessions not found")
+            
+            sessions = sessions_response.json()
+            
+            # Find race and qualifying sessions
+            race_session = next((s for s in sessions if s['session_name'] == 'Race'), None)
+            qualifying_session = next((s for s in sessions if s['session_name'] == 'Qualifying'), None)
+            
+            race_data = {"meeting": race_meeting}
+            qualifying_data = {"meeting": race_meeting}
+            
+            if race_session:
+                # Get race results
+                drivers_response = requests.get(f"{OPENF1_BASE_URL}/drivers?session_key={race_session['session_key']}")
+                position_response = requests.get(f"{OPENF1_BASE_URL}/position?session_key={race_session['session_key']}")
+                laps_response = requests.get(f"{OPENF1_BASE_URL}/laps?session_key={race_session['session_key']}")
+                
+                race_data.update({
+                    "session": race_session,
+                    "drivers": drivers_response.json() if drivers_response.status_code == 200 else [],
+                    "positions": position_response.json() if position_response.status_code == 200 else [],
+                    "laps": laps_response.json() if laps_response.status_code == 200 else []
+                })
+            
+            if qualifying_session:
+                # Get qualifying results
+                drivers_response = requests.get(f"{OPENF1_BASE_URL}/drivers?session_key={qualifying_session['session_key']}")
+                position_response = requests.get(f"{OPENF1_BASE_URL}/position?session_key={qualifying_session['session_key']}")
+                laps_response = requests.get(f"{OPENF1_BASE_URL}/laps?session_key={qualifying_session['session_key']}")
+                
+                qualifying_data.update({
+                    "session": qualifying_session,
+                    "drivers": drivers_response.json() if drivers_response.status_code == 200 else [],
+                    "positions": position_response.json() if position_response.status_code == 200 else [],
+                    "laps": laps_response.json() if laps_response.status_code == 200 else []
+                })
+            
+            return {
+                "year": year,
+                "round": round,
+                "race_data": race_data,
+                "qualifying_data": qualifying_data,
+                "data_source": "openf1"
+            }
+    except requests.RequestException as e:
+        logger.error(f"API request error: {e}")
+        raise HTTPException(status_code=500, detail="External API error")
+    except Exception as e:
+        logger.error(f"Error getting race details for {year}/{round}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/races/{year}/{round}/qualifying")
+async def get_qualifying_results(year: int, round: int):
+    """Get qualifying results for a specific race"""
+    try:
+        if year <= 2022:
+            # Use Jolpica API
+            response = requests.get(f"{JOLPICA_BASE_URL}/{year}/{round}/qualifying.json")
+            if response.status_code != 200:
+                raise HTTPException(status_code=404, detail="Qualifying results not found")
+            
+            data = response.json()
+            qualifying_data = data["MRData"]["RaceTable"]["Races"]
+            
+            return {
+                "year": year,
+                "round": round,
+                "qualifying_data": qualifying_data,
+                "data_source": "jolpica"
+            }
+        else:
+            # Use OpenF1 API
+            meetings_response = requests.get(f"{OPENF1_BASE_URL}/meetings?year={year}")
+            if meetings_response.status_code != 200:
+                raise HTTPException(status_code=404, detail="Season not found")
+            
+            meetings = meetings_response.json()
+            races = [m for m in meetings if "Grand Prix" in m.get("meeting_name", "")]
+            
+            if round > len(races) or round < 1:
+                raise HTTPException(status_code=404, detail="Race round not found")
+            
+            race_meeting = races[round - 1]
+            
+            # Get qualifying session
+            sessions_response = requests.get(f"{OPENF1_BASE_URL}/sessions?meeting_key={race_meeting['meeting_key']}&session_name=Qualifying")
+            if sessions_response.status_code != 200:
+                raise HTTPException(status_code=404, detail="Qualifying session not found")
+            
+            sessions = sessions_response.json()
+            if not sessions:
+                raise HTTPException(status_code=404, detail="Qualifying session not found")
+            
+            qualifying_session = sessions[0]
+            
+            # Get qualifying data
+            drivers_response = requests.get(f"{OPENF1_BASE_URL}/drivers?session_key={qualifying_session['session_key']}")
+            position_response = requests.get(f"{OPENF1_BASE_URL}/position?session_key={qualifying_session['session_key']}")
+            laps_response = requests.get(f"{OPENF1_BASE_URL}/laps?session_key={qualifying_session['session_key']}")
+            
+            qualifying_data = {
+                "meeting": race_meeting,
+                "session": qualifying_session,
+                "drivers": drivers_response.json() if drivers_response.status_code == 200 else [],
+                "positions": position_response.json() if position_response.status_code == 200 else [],
+                "laps": laps_response.json() if laps_response.status_code == 200 else []
+            }
+            
+            return {
+                "year": year,
+                "round": round,
+                "qualifying_data": qualifying_data,
+                "data_source": "openf1"
+            }
+    except requests.RequestException as e:
+        logger.error(f"API request error: {e}")
+        raise HTTPException(status_code=500, detail="External API error")
+    except Exception as e:
+        logger.error(f"Error getting qualifying results for {year}/{round}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/races/{year}/{round}/race")
+async def get_race_results(year: int, round: int):
+    """Get race results for a specific race"""
     try:
         if year <= 2022:
             # Use Jolpica API
             response = requests.get(f"{JOLPICA_BASE_URL}/{year}/{round}/results.json")
             if response.status_code != 200:
-                raise HTTPException(status_code=404, detail="Race not found")
+                raise HTTPException(status_code=404, detail="Race results not found")
             
             data = response.json()
             race_data = data["MRData"]["RaceTable"]["Races"]
@@ -265,7 +429,7 @@ async def get_race_details(year: int, round: int):
                 "data_source": "jolpica"
             }
         else:
-            # For OpenF1, we need to find the race by meeting key
+            # Use OpenF1 API
             meetings_response = requests.get(f"{OPENF1_BASE_URL}/meetings?year={year}")
             if meetings_response.status_code != 200:
                 raise HTTPException(status_code=404, detail="Season not found")
@@ -289,15 +453,17 @@ async def get_race_details(year: int, round: int):
             
             race_session = sessions[0]
             
-            # Get race results (positions at end of race)
-            positions_response = requests.get(f"{OPENF1_BASE_URL}/position?session_key={race_session['session_key']}")
+            # Get race data
             drivers_response = requests.get(f"{OPENF1_BASE_URL}/drivers?session_key={race_session['session_key']}")
+            position_response = requests.get(f"{OPENF1_BASE_URL}/position?session_key={race_session['session_key']}")
+            laps_response = requests.get(f"{OPENF1_BASE_URL}/laps?session_key={race_session['session_key']}")
             
             race_data = {
                 "meeting": race_meeting,
                 "session": race_session,
-                "positions": positions_response.json() if positions_response.status_code == 200 else [],
-                "drivers": drivers_response.json() if drivers_response.status_code == 200 else []
+                "drivers": drivers_response.json() if drivers_response.status_code == 200 else [],
+                "positions": position_response.json() if position_response.status_code == 200 else [],
+                "laps": laps_response.json() if laps_response.status_code == 200 else []
             }
             
             return {
@@ -310,7 +476,7 @@ async def get_race_details(year: int, round: int):
         logger.error(f"API request error: {e}")
         raise HTTPException(status_code=500, detail="External API error")
     except Exception as e:
-        logger.error(f"Error getting race details for {year}/{round}: {e}")
+        logger.error(f"Error getting race results for {year}/{round}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
