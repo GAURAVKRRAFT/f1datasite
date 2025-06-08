@@ -161,13 +161,139 @@ class F1APITester:
             if data.get('year') == year and data.get('round') == round_num and data.get('data_source') == expected_source:
                 print(f"✅ Race details for {year} Round {round_num} has correct metadata")
                 
+                # Check race data
                 if 'race_data' in data:
                     print(f"✅ Race data is present")
-                    return True
+                    
+                    # Check race results structure based on source
+                    if expected_source == 'jolpica' and data['race_data']:
+                        race = data['race_data'][0]
+                        if 'Results' in race and isinstance(race['Results'], list):
+                            result = race['Results'][0]
+                            if 'position' in result and 'Driver' in result and 'Constructor' in result:
+                                print(f"✅ Race results structure is correct for jolpica source")
+                            else:
+                                print(f"❌ Race results structure is incorrect for jolpica source")
+                    elif expected_source == 'openf1' and 'positions' in data['race_data']:
+                        print(f"✅ Race results structure is correct for openf1 source")
+                else:
+                    print(f"❌ Race data is missing")
+                
+                # Check qualifying data
+                if 'qualifying_data' in data:
+                    print(f"✅ Qualifying data is present")
+                    
+                    # Check qualifying results structure based on source
+                    if expected_source == 'jolpica' and data['qualifying_data']:
+                        qualifying = data['qualifying_data'][0]
+                        if 'QualifyingResults' in qualifying and isinstance(qualifying['QualifyingResults'], list):
+                            result = qualifying['QualifyingResults'][0]
+                            if 'position' in result and 'Driver' in result and 'Q1' in result:
+                                print(f"✅ Qualifying results structure is correct for jolpica source")
+                            else:
+                                print(f"❌ Qualifying results structure is incorrect for jolpica source")
+                    elif expected_source == 'openf1' and 'positions' in data['qualifying_data']:
+                        print(f"✅ Qualifying results structure is correct for openf1 source")
+                else:
+                    print(f"❌ Qualifying data is missing")
+                
+                return True
+            else:
+                print(f"❌ Race details has incorrect metadata")
+        
+        return False
+        
+    def test_qualifying_results(self, year, round_num):
+        """Test the qualifying results endpoint for a specific race"""
+        success, data = self.run_test(f"Qualifying Results ({year}, Round {round_num})", f"/api/races/{year}/{round_num}/qualifying")
+        
+        if success:
+            expected_source = "jolpica" if year <= 2022 else "openf1"
+            
+            if data.get('year') == year and data.get('round') == round_num and data.get('data_source') == expected_source:
+                print(f"✅ Qualifying results for {year} Round {round_num} has correct metadata")
+                
+                if 'qualifying_data' in data:
+                    print(f"✅ Qualifying data is present")
+                    
+                    # Check qualifying results structure based on source
+                    if expected_source == 'jolpica' and data['qualifying_data']:
+                        qualifying = data['qualifying_data'][0]
+                        if 'QualifyingResults' in qualifying and isinstance(qualifying['QualifyingResults'], list):
+                            result = qualifying['QualifyingResults'][0]
+                            if 'position' in result and 'Driver' in result:
+                                print(f"✅ Qualifying results structure is correct for jolpica source")
+                                
+                                # Check Q1, Q2, Q3 times
+                                if 'Q1' in result:
+                                    print(f"✅ Q1 time is present: {result['Q1']}")
+                                if 'Q2' in result:
+                                    print(f"✅ Q2 time is present: {result['Q2']}")
+                                if 'Q3' in result:
+                                    print(f"✅ Q3 time is present: {result['Q3']}")
+                                
+                                return True
+                            else:
+                                print(f"❌ Qualifying results structure is incorrect for jolpica source")
+                        else:
+                            print(f"❌ QualifyingResults array is missing or invalid")
+                    elif expected_source == 'openf1':
+                        if 'positions' in data['qualifying_data'] and isinstance(data['qualifying_data']['positions'], list):
+                            print(f"✅ Qualifying positions data is present for openf1 source")
+                            return True
+                        else:
+                            print(f"❌ Qualifying positions data is missing for openf1 source")
+                else:
+                    print(f"❌ Qualifying data is missing")
+            else:
+                print(f"❌ Qualifying results has incorrect metadata")
+        
+        return False
+        
+    def test_race_results(self, year, round_num):
+        """Test the race results endpoint for a specific race"""
+        success, data = self.run_test(f"Race Results ({year}, Round {round_num})", f"/api/races/{year}/{round_num}/race")
+        
+        if success:
+            expected_source = "jolpica" if year <= 2022 else "openf1"
+            
+            if data.get('year') == year and data.get('round') == round_num and data.get('data_source') == expected_source:
+                print(f"✅ Race results for {year} Round {round_num} has correct metadata")
+                
+                if 'race_data' in data:
+                    print(f"✅ Race data is present")
+                    
+                    # Check race results structure based on source
+                    if expected_source == 'jolpica' and data['race_data']:
+                        race = data['race_data'][0]
+                        if 'Results' in race and isinstance(race['Results'], list):
+                            result = race['Results'][0]
+                            if 'position' in result and 'Driver' in result and 'Constructor' in result:
+                                print(f"✅ Race results structure is correct for jolpica source")
+                                
+                                # Check race result details
+                                if 'points' in result:
+                                    print(f"✅ Points data is present: {result['points']}")
+                                if 'Time' in result:
+                                    print(f"✅ Time data is present: {result.get('Time', {}).get('time', 'N/A')}")
+                                if 'status' in result:
+                                    print(f"✅ Status is present: {result['status']}")
+                                
+                                return True
+                            else:
+                                print(f"❌ Race results structure is incorrect for jolpica source")
+                        else:
+                            print(f"❌ Results array is missing or invalid")
+                    elif expected_source == 'openf1':
+                        if 'positions' in data['race_data'] and isinstance(data['race_data']['positions'], list):
+                            print(f"✅ Race positions data is present for openf1 source")
+                            return True
+                        else:
+                            print(f"❌ Race positions data is missing for openf1 source")
                 else:
                     print(f"❌ Race data is missing")
             else:
-                print(f"❌ Race details has incorrect metadata")
+                print(f"❌ Race results has incorrect metadata")
         
         return False
 
