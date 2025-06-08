@@ -55,6 +55,21 @@ function App() {
     }
   };
 
+  const fetchRaceDetails = async (year, round) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_BASE_URL}/api/races/${year}/${round}`);
+      setRaceDetails(response.data);
+      setSelectedRace({ year, round });
+      setCurrentView('race-detail');
+    } catch (err) {
+      setError(`Failed to fetch race details for ${year} Round ${round}`);
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderSeasons = () => (
     <div className="seasons-container">
       <div className="hero-section">
