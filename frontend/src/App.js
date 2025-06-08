@@ -11,6 +11,8 @@ function App() {
   const [seasonDetails, setSeasonDetails] = useState(null);
   const [drivers, setDrivers] = useState([]);
   const [constructors, setConstructors] = useState([]);
+  const [selectedRace, setSelectedRace] = useState(null);
+  const [raceDetails, setRaceDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
