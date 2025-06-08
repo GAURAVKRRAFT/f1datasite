@@ -285,9 +285,153 @@ body {
   margin-bottom: 0.5rem;
 }
 
-.race-date {
+.race-action {
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--f1-red);
+  font-weight: 600;
+  margin-top: 0.5rem;
+  opacity: 0.8;
+}
+
+/* Race Detail */
+.race-detail {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.race-header {
+  margin-bottom: 3rem;
+}
+
+.race-title {
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 2rem;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.race-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.race-location-detail,
+.race-date-detail,
+.race-round-detail {
+  font-size: 1.1rem;
+  color: var(--f1-silver);
+  font-weight: 500;
+}
+
+/* Results Container */
+.results-container {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.results-section {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.results-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Results Table */
+.results-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.results-table th {
+  background: var(--gradient-primary);
+  color: white;
+  padding: 1rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--f1-red);
+}
+
+.results-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.results-table tr:hover {
+  background: rgba(225, 6, 0, 0.1);
+}
+
+.results-table tr.podium-position {
+  background: rgba(255, 184, 0, 0.1);
+}
+
+.results-table tr.podium-position:hover {
+  background: rgba(255, 184, 0, 0.2);
+}
+
+.position {
+  font-weight: 700;
+  color: var(--f1-gold);
+  text-align: center;
+  position: relative;
+}
+
+.trophy {
+  margin-left: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.driver-name {
+  font-weight: 600;
+  color: var(--f1-white);
+}
+
+.team-name {
+  color: var(--f1-silver);
+  font-size: 0.9rem;
+}
+
+.points {
+  font-weight: 600;
+  color: var(--f1-gold);
+  text-align: center;
+}
+
+.no-data {
+  text-align: center;
+  color: var(--f1-silver);
+  padding: 2rem;
+  font-style: italic;
 }
 
 /* Drivers Grid */
