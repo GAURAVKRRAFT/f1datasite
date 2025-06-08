@@ -143,7 +143,11 @@ function App() {
           <h2 className="section-title">Races</h2>
           <div className="races-grid">
             {seasonDetails?.races?.map((race, index) => (
-              <div key={index} className="race-card">
+              <div 
+                key={index} 
+                className="race-card"
+                onClick={() => fetchRaceDetails(selectedSeason, race.round || index + 1)}
+              >
                 <div className="race-round">Round {race.round || index + 1}</div>
                 <div className="race-name">
                   {race.raceName || race.meeting_name}
@@ -155,6 +159,9 @@ function App() {
                 </div>
                 <div className="race-date">
                   {race.date || race.date_start?.split('T')[0]}
+                </div>
+                <div className="race-action">
+                  Click for Results →
                 </div>
               </div>
             ))}
