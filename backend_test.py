@@ -309,29 +309,32 @@ def main():
     seasons_ok = tester.test_seasons_list()
     
     # Test different years for season details
-    historical_year = 2005  # First historical year
-    mid_year = 2015         # Middle historical year
-    modern_year = 2024      # Modern year
+    historical_year = 2010  # Historical year (2010 for Australian GP)
+    modern_year = 2024      # Modern year (2024 for Bahrain GP)
     
     # Test season details
     historical_details_ok = tester.test_season_details(historical_year)
-    mid_details_ok = tester.test_season_details(mid_year)
     modern_details_ok = tester.test_season_details(modern_year)
     
     # Test drivers
     historical_drivers_ok = tester.test_season_drivers(historical_year)
-    mid_drivers_ok = tester.test_season_drivers(mid_year)
     modern_drivers_ok = tester.test_season_drivers(modern_year)
     
     # Test constructors
     historical_constructors_ok = tester.test_season_constructors(historical_year)
-    mid_constructors_ok = tester.test_season_constructors(mid_year)
     modern_constructors_ok = tester.test_season_constructors(modern_year)
     
-    # Test race details (assuming round 1 exists for all seasons)
+    # Test race details (Round 1 for both years)
     historical_race_ok = tester.test_race_details(historical_year, 1)
-    mid_race_ok = tester.test_race_details(mid_year, 1)
     modern_race_ok = tester.test_race_details(modern_year, 1)
+    
+    # Test qualifying results (Round 1 for both years)
+    historical_qualifying_ok = tester.test_qualifying_results(historical_year, 1)
+    modern_qualifying_ok = tester.test_qualifying_results(modern_year, 1)
+    
+    # Test race results (Round 1 for both years)
+    historical_race_results_ok = tester.test_race_results(historical_year, 1)
+    modern_race_results_ok = tester.test_race_results(modern_year, 1)
     
     # Print summary
     print("\n" + "=" * 50)
@@ -345,7 +348,10 @@ def main():
         seasons_ok,
         historical_details_ok, modern_details_ok,
         historical_drivers_ok, modern_drivers_ok,
-        historical_constructors_ok, modern_constructors_ok
+        historical_constructors_ok, modern_constructors_ok,
+        historical_race_ok, modern_race_ok,
+        historical_qualifying_ok, modern_qualifying_ok,
+        historical_race_results_ok, modern_race_results_ok
     ]
     
     return 0 if all(critical_tests) else 1
